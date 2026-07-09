@@ -15,16 +15,28 @@ namespace Script_runner {
             var node = System.Text.Json.Nodes.JsonNode.Parse(
                 System.Text.Json.JsonSerializer.Serialize(City)
             )       !.AsObject();
-
+            
             if(_extras.TryGetValue(City, out var extras))
             {
                 foreach (var (key, value) in extras)
-                    node[key] = System.Text.Json.Nodes.JsonValue.Create(value);
+                    if(value is Delegate) {
+                        
+                        continue ;
+                    } 
+                    else {
+                        node[key] = System.Text.Json.Nodes.JsonValue.Create(value);
+                    }
+                        
             }
-
+            /*if(extras.TryGetValue("printFnc", out var fn) && fn is Action<string> printFunc)
+            {
+                printFunc("hello from ApiClient");
+                //MessageBox.Show(result);
+            }*/
+            
             string json = node.ToJsonString();
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            HttpResponseMessage response = client.PostAsync($"http://localhost:3000/{endpoint}", content).Result;
+            HttpResponseMessage response = client.PostAsync($"http://localhost:5153/{endpoint}", content).Result;
             return response.Content.ReadAsStringAsync().Result;
         }
 }

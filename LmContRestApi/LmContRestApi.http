@@ -1,0 +1,6 @@
+@LmContRestApi_HostAddress = http://localhost:5153
+
+GET {{LmContRestApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

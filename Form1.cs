@@ -4,10 +4,6 @@ using Microsoft.CodeAnalysis.Scripting;
 
 
 namespace Script_runner {
-
-
-
-
     public partial class Form1 : Form {
         public Form1() {
             InitializeComponent();
@@ -16,6 +12,7 @@ namespace Script_runner {
         public ApiClient Api { get; } = new ApiClient();
 
         private async void button1_Click(object sender , EventArgs e) {
+
             try
             {
                 CityData city = new CityData();
@@ -52,15 +49,14 @@ namespace Script_runner {
         private async void createbutton_Click(object sender , EventArgs e) {
 
             try {
-                CityData city = new CityData();
-                city.Country = textBox1.Text;
-                city.County = textBox2.Text;
-                city.City = textBox3.Text;
+                
 
                 ///definialni egy valtozot a globalis hozzafereshez
                 var globals = new InsertGlobals {
                     api = this.Api,
-                    City = city,
+                    country = textBox1.Text,
+                    county = textBox2.Text, 
+                    city = textBox3.Text,
               
                 };
 
@@ -98,10 +94,10 @@ namespace Script_runner {
         public string County { get; set; }
         public string City { get; set; }
 
-        public override string ToString()
+        /*public override string ToString()
         {
             return $"{Country}, {County}, {City}";
-        }
+        }*/
 
     }
 }

@@ -17,7 +17,9 @@ namespace Script_runner {
     }
 
     public class InsertGlobals {
-        public CityData City ;
+        public string country;
+        public string county;
+        public string city;
         public ApiClient api ;
     }
 }

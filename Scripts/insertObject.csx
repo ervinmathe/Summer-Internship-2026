@@ -3,12 +3,24 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text.Json;
-var client = new HttpClient();
 
+
+CityData City = new CityData {
+    Country = country ,
+    County = county ,
+    City = city
+};
+
+var client = new HttpClient();
 
 static ConditionalWeakTable<object, Dictionary<string, object>> _extras = new();
 
 var extra = _extras.GetOrCreateValue(City);
+
+void print(string message) {
+    MessageBox.Show(message) ;
+}
+
 
 try {
     var encodedName = Uri.EscapeDataString(City.City);
@@ -24,7 +36,8 @@ try {
         double lon = first.GetProperty("longitude").GetDouble();
         extra["x"] = lon;
         extra["y"] = lat;
-
+        extra["printFnc"] = new Action<string>(print);
+        
 
         if (first.TryGetProperty("country", out var countryProp))
         {
@@ -43,7 +56,7 @@ try {
                 City.County = correctCounty;
             }
         }
-        var response = api.PostCity(City ,  "insertcity" , _extras);
+        var response = api.PostCity(City ,  "api/update" , _extras);
 
         return response;
     } else {
