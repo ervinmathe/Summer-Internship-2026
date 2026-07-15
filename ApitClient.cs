@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http ;
 using System.Runtime.CompilerServices;
 using System.Text;
+using SharedModels;
 
 namespace Script_runner {
     public class ApiClient {
@@ -38,6 +39,6 @@ namespace Script_runner {
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             HttpResponseMessage response = client.PostAsync($"http://localhost:5153/{endpoint}", content).Result;
             return response.Content.ReadAsStringAsync().Result;
-        }
+       }
 }
 }

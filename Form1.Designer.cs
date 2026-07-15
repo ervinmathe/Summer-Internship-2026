@@ -33,6 +33,11 @@
             resultLabel = new Label();
             createbutton = new Button();
             deletbutton = new Button();
+            button2 = new Button();
+            button3 = new Button();
+            button4 = new Button();
+            label4 = new Label();
+            label5 = new Label();
             SuspendLayout();
             // 
             // textBox1
@@ -88,19 +93,19 @@
             // 
             // button1
             // 
-            button1.Location = new Point(165 , 194);
+            button1.Location = new Point(324 , 194);
             button1.Margin = new Padding(3 , 2 , 3 , 2);
             button1.Name = "button1";
-            button1.Size = new Size(82 , 22);
+            button1.Size = new Size(133 , 22);
             button1.TabIndex = 6;
-            button1.Text = "Submit";
+            button1.Text = "Printtoscreen";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
             // resultLabel
             // 
             resultLabel.AutoSize = true;
-            resultLabel.Location = new Point(340 , 231);
+            resultLabel.Location = new Point(357 , 169);
             resultLabel.Name = "resultLabel";
             resultLabel.Size = new Size(68 , 15);
             resultLabel.TabIndex = 7;
@@ -108,7 +113,7 @@
             // 
             // createbutton
             // 
-            createbutton.Location = new Point(270 , 194);
+            createbutton.Location = new Point(83 , 288);
             createbutton.Name = "createbutton";
             createbutton.Size = new Size(75 , 23);
             createbutton.TabIndex = 8;
@@ -118,7 +123,7 @@
             // 
             // deletbutton
             // 
-            deletbutton.Location = new Point(403 , 193);
+            deletbutton.Location = new Point(83 , 317);
             deletbutton.Name = "deletbutton";
             deletbutton.Size = new Size(75 , 23);
             deletbutton.TabIndex = 9;
@@ -126,11 +131,67 @@
             deletbutton.UseVisualStyleBackColor = true;
             deletbutton.Click += deletbutton_Click;
             // 
+            // button2
+            // 
+            button2.Location = new Point(276 , 340);
+            button2.Margin = new Padding(3 , 2 , 3 , 2);
+            button2.Name = "button2";
+            button2.Size = new Size(82 , 22);
+            button2.TabIndex = 10;
+            button2.Text = "viewBo";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
+            // 
+            // button3
+            // 
+            button3.Location = new Point(232 , 288);
+            button3.Margin = new Padding(3 , 2 , 3 , 2);
+            button3.Name = "button3";
+            button3.Size = new Size(172 , 22);
+            button3.TabIndex = 11;
+            button3.Text = "Create instance in api";
+            button3.UseVisualStyleBackColor = true;
+            button3.Click += button3_Click;
+            // 
+            // button4
+            // 
+            button4.Location = new Point(255 , 314);
+            button4.Margin = new Padding(3 , 2 , 3 , 2);
+            button4.Name = "button4";
+            button4.Size = new Size(118 , 22);
+            button4.TabIndex = 12;
+            button4.Text = "Clear Api Store";
+            button4.UseVisualStyleBackColor = true;
+            button4.Click += button4_Click;
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(270 , 256);
+            label4.Name = "label4";
+            label4.Size = new Size(90 , 15);
+            label4.TabIndex = 13;
+            label4.Text = "API interactions";
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(59 , 256);
+            label5.Name = "label5";
+            label5.Size = new Size(120 , 15);
+            label5.TabIndex = 14;
+            label5.Text = "Database interactions";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F , 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(700 , 338);
+            ClientSize = new Size(626 , 419);
+            Controls.Add(label5);
+            Controls.Add(label4);
+            Controls.Add(button4);
+            Controls.Add(button3);
+            Controls.Add(button2);
             Controls.Add(deletbutton);
             Controls.Add(createbutton);
             Controls.Add(resultLabel);
@@ -160,5 +221,10 @@
         private Button createbutton;
         private Button deletbutton;
         public Label resultLabel;
+        private Button button2;
+        private Button button3;
+        private Button button4;
+        private Label label4;
+        private Label label5;
     }
 }

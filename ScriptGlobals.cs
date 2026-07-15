@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
+using SharedModels ;
 
 namespace Script_runner {
     public class ScriptGlobals
@@ -21,5 +23,16 @@ namespace Script_runner {
         public string county;
         public string city;
         public ApiClient api ;
+
+    }
+
+    public class getBoData {
+        public string boName ;
+    }
+
+    public class InstanceBoGlobals {
+        public string TypeName { get ; set; } = default! ;
+        public string[] data ;
+
     }
 }

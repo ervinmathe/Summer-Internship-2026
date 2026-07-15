@@ -1,6 +1,8 @@
 using Microsoft.ClearScript.V8 ;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
+using SharedModels;
+using System.Net.Http;
 
 
 namespace Script_runner {
@@ -9,29 +11,34 @@ namespace Script_runner {
             InitializeComponent();
         }
 
+        private string[] GetAllTextBoxValues() {
+            return this.Controls
+                .OfType<TextBox>()
+                .Select(tb => tb.Text)
+                .ToArray();
+        }
+
         public ApiClient Api { get; } = new ApiClient();
 
         private async void button1_Click(object sender , EventArgs e) {
 
-            try
-            {
+            try {
                 CityData city = new CityData();
                 city.Country = textBox1.Text;
                 city.County = textBox2.Text;
                 city.City = textBox3.Text;
-                
 
-                var globals = new PrintGlobals
-                {
-                    Form = this,
-                    City = city,
+
+                var globals = new PrintGlobals {
+                    Form = this ,
+                    City = city ,
                 };
 
                 var options = ScriptOptions.Default
-                    .WithReferences(typeof(Form1).Assembly, typeof(Control).Assembly)
-                    .WithImports("System", "System.Windows.Forms" , "Script_runner");
+                    .WithReferences(typeof(Form1).Assembly , typeof(Control).Assembly)
+                    .WithImports("System" , "System.Windows.Forms" , "Script_runner");
 
-                string scriptPath = Path.Combine(Application.StartupPath, "Scripts", "printobject.csx");
+                string scriptPath = Path.Combine(Application.StartupPath , "Scripts" , "printobject.csx");
                 string code = File.ReadAllText(scriptPath);
 
                 await CSharpScript.RunAsync(code , options , globals: globals , globalsType: typeof(PrintGlobals));
@@ -39,9 +46,7 @@ namespace Script_runner {
 
 
 
-            }
-            catch (Exception ex)
-            {
+            } catch(Exception ex) {
                 MessageBox.Show(ex.Message);
             }
         }
@@ -49,55 +54,87 @@ namespace Script_runner {
         private async void createbutton_Click(object sender , EventArgs e) {
 
             try {
-                
+
 
                 ///definialni egy valtozot a globalis hozzafereshez
                 var globals = new InsertGlobals {
-                    api = this.Api,
-                    country = textBox1.Text,
-                    county = textBox2.Text, 
-                    city = textBox3.Text,
-              
+                    api = this.Api ,
+                    country = textBox1.Text ,
+                    county = textBox2.Text ,
+                    city = textBox3.Text ,
+
                 };
 
                 //a globalis hozzaferest biztositja a tipusokhoz
                 var options = ScriptOptions.Default
-                    .WithReferences(typeof(Form1).Assembly, typeof(Control).Assembly)
-                    .WithImports("System", "System.Windows.Forms" , "Script_runner");
+                    .WithReferences(typeof(Form1).Assembly , typeof(Control).Assembly)
+                    .WithImports("System" , "System.Windows.Forms" , "Script_runner");
 
                 //script locationje
-                string scriptPath = Path.Combine(Application.StartupPath, "Scripts", "insertObject.csx");
+                string scriptPath = Path.Combine(Application.StartupPath , "Scripts" , "insertObject.csx");
                 string code = File.ReadAllText(scriptPath);
 
                 //futtatas es response
                 var res = await CSharpScript.RunAsync(code , options , globals: globals , globalsType: typeof(InsertGlobals));
 
 
-                MessageBox.Show(res.ReturnValue.ToString()) ;
+                MessageBox.Show(res.ReturnValue.ToString());
                 //MessageBox.Show(city.ToString()) ;
 
             } catch(Exception ex) {
                 MessageBox.Show(ex.Message);
             }
-            
+
 
         }
-           
+
 
         private void deletbutton_Click(object sender , EventArgs e) {
-            
+
         }
+
+        private void button2_Click(object sender , EventArgs e) {
+            BoUI boui = new BoUI();
+            boui.Show();
+        }
+
+        private async void button3_Click(object sender , EventArgs e) {
+            try {
+                var globals = new InstanceBoGlobals {
+                    TypeName = "CityData" ,
+                    data = GetAllTextBoxValues() ,
+
+                };
+
+                var options = ScriptOptions.Default
+                    .WithReferences(typeof(Form1).Assembly , typeof(Control).Assembly)
+                    .WithImports("System" , "System.Windows.Forms" , "Script_runner");
+
+                //script locationje
+                string scriptPath = Path.Combine(Application.StartupPath , "Scripts" , "createBoInstance.csx");
+                string code = File.ReadAllText(scriptPath);
+
+                //futtatas es response
+                var res = await CSharpScript.RunAsync(code , options , globals: globals , globalsType: typeof(InstanceBoGlobals));
+
+
+                MessageBox.Show(res.ReturnValue.ToString());
+
+
+            } catch(Exception ex) {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private async void button4_Click(object sender , EventArgs e) {
+            var client = new HttpClient();
+
+            var response = await client.DeleteAsync("http://localhost:5153/api/data/clearStore").Result.Content.ReadAsStringAsync();
+
+            MessageBox.Show(response);
+        }
+
     }
 
-    public class CityData {
-        public string Country { get; set; }
-        public string County { get; set; }
-        public string City { get; set; }
 
-        /*public override string ToString()
-        {
-            return $"{Country}, {County}, {City}";
-        }*/
-
-    }
 }
