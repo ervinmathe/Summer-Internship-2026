@@ -108,4 +108,50 @@ public class UpdateController : ControllerBase
         JsonValueKind.Null => null,
         _ => el.GetRawText()
     };
+
+    [HttpGet("{name}")]
+    public async Task<IActionResult> GetScript(string name)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string query = "SELECT CompiledAssembly FROM CompiledScripts WHERE ScriptName = @name";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@name", name);
+
+        var result = await cmd.ExecuteScalarAsync();
+        if (result == null || result == DBNull.Value)
+        {
+            return NotFound(new { error = $"Script '{name}' not found." });
+        }
+
+        return Ok(new
+        {
+            ScriptName = name,
+            CompiledAssembly = result.ToString()
+        });
+    }
+
+    [HttpGet("getScriptContent/{name}")]
+    public async Task<IActionResult> GetScriptContent(string name)
+    {
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        const string query = "SELECT ScriptContent FROM CompiledScripts WHERE ScriptName = @name";
+        using var cmd = new SqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@name", name);
+
+        var result = await cmd.ExecuteScalarAsync();
+        if (result == null || result == DBNull.Value)
+        {
+            return NotFound(new { error = $"Script '{name}' not found." });
+        }
+
+        return Ok(new
+        {
+            ScriptName = name,
+            ScriptContent = result.ToString()
+        });
+    }
 }

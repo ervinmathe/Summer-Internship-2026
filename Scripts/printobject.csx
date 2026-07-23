@@ -1,33 +1,36 @@
-
-
 //City.Country = "Hu" ;
 
-
-
 using System.Threading.Tasks;
+using SharedModels;
+using Script_runner;
 
-async Task modify(CityData City) {
-    string name2 = string.Empty;
+async Task<CityData> modify(CityData City) {
     try {
-        int i = 0;
-        int? i2 = null ;
-        string name = null;
-        int i3 = i2!.Value + i ;
-        Form.resultLabel.Text = "Elotte" ;
-        await Task.Delay(2000) ;
-        Form.resultLabel.Text = "Utana" ; 
-        name2 = name ;
+        Form.resultLabel.Text = "Elotte";
+
+        await Task.Delay(2000);
+        Form.resultLabel.Text = "Utana";
+
     } catch(Exception ex) {
-        Form.resultLabel.Text = ex.Message ;
+        Form.resultLabel.Text = ex.Message;
+        return City;
     }
-               
-        
-    await Task.Delay(2000) ;
-    City.County = "Budapest" ;
-    City.City = "Budapest" ;
-    Form.resultLabel.Text = name2 ;
+
+    await Task.Delay(2000);
+    City.County = "Budapest";
+    City.City = "Budapest";
+    return City;
 }
 
-await modify(City) ;
+var result = await modify(City);
+Form.resultLabel.Text = $"Country: {result.Country} | County: {result.County} | City: {result.City}";
 
-//Form.resultLabel.Text = City.ToString() ;
+// Run the other precompiled script from the DB
+var otherGlobals = new getBoData
+{
+    boName = "CityData"
+};
+
+object extraResult = await PreCompiledScriptRunner.RunFromApiAsync("getBoData", otherGlobals);
+
+return $"Country: {result.Country}\nCounty: {result.County}\nCity: {result.City}\n---\n{extraResult}";

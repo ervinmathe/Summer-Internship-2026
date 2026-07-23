@@ -3,6 +3,7 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/Solution Items/" />
   <Project Path="Script_runner.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>

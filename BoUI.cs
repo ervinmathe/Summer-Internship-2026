@@ -17,24 +17,38 @@ namespace Script_runner {
         }
         private async void BoUI_afterload(object sender , EventArgs e) { 
             
-            string bo = "CityData" ;
+            string bo = "CityData";
 
-            var globals = new getBoData {
-                boName = bo,
-            } ;
+var globals = new getBoData
+{
+    boName = bo,
+};
 
-            var options = ScriptOptions.Default
-                    .WithReferences(typeof(BoUI).Assembly , typeof(Control).Assembly)
-                    .WithImports("System" , "System.Windows.Forms" , "Script_runner");
+object result;
 
-            //script locationje
-            string scriptPath = Path.Combine(Application.StartupPath , "Scripts" , "getBoData.csx");
-            string code = File.ReadAllText(scriptPath);
+try
+{
+    // 1. Try to fetch the pre-compiled bytecode from the DB and run it instantly
+    result = await PreCompiledScriptRunner.RunFromApiAsync("getBoData", globals);
+}
+catch (Exception ex) when (ex.Message.Contains("404") || ex.Message.Contains("not found"))
+{
+    // 2. FALLBACK: If the DB returns a 404, it means it's empty!
+    var uploader = new ScriptUploaderService("http://localhost:5153/api/update");
+    string scriptPath = Path.Combine(Application.StartupPath, "Scripts", "getBoData.csx");
 
-            //futtatas es response
-            var res = await CSharpScript.RunAsync(code , options , globals: globals , globalsType: typeof(getBoData));
-            
-            label1.Text = res.ReturnValue?.ToString() ?? "No return value";
+    // Compile the local .csx file and insert it into the database
+    await uploader.UploadScriptAsync(
+        scriptName: "getBoData",
+        scriptPath: scriptPath,
+        globalsType: typeof(getBoData)
+    );
+
+    // 3. Try running it again now that it has been successfully uploaded
+    result = await PreCompiledScriptRunner.RunFromApiAsync("getBoData", globals);
+}
+
+label1.Text = result?.ToString() ?? "No return value";
         }
         private async void BoUI_Load(object sender , EventArgs e) {
         } 

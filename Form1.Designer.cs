@@ -38,6 +38,7 @@
             button4 = new Button();
             label4 = new Label();
             label5 = new Label();
+            button5 = new Button();
             SuspendLayout();
             // 
             // textBox1
@@ -182,11 +183,22 @@
             label5.TabIndex = 14;
             label5.Text = "Database interactions";
             // 
+            // button5
+            // 
+            button5.Location = new Point(39 , 82);
+            button5.Name = "button5";
+            button5.Size = new Size(119 , 23);
+            button5.TabIndex = 15;
+            button5.Text = "Internal Editor";
+            button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F , 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(626 , 419);
+            Controls.Add(button5);
             Controls.Add(label5);
             Controls.Add(label4);
             Controls.Add(button4);
@@ -226,5 +238,6 @@
         private Button button4;
         private Label label4;
         private Label label5;
+        private Button button5;
     }
 }
