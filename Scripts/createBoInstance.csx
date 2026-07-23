@@ -5,14 +5,18 @@ using System.Text;
 using System.Collections.Generic;
 using System.Net.Http;
 
-var client  = new HttpClient();
+var client = new HttpClient();
+
+// Get the Business Object passed in the context
+var cityData = context.TargetBo as CityData;
+if (cityData == null) return ScriptResult.Cancel("TargetBo is not CityData");
 
 var props = typeof(CityData).GetProperties();
 var dict = new Dictionary<string, object?>();
 
-for (int i = 0; i < data.Length && i < props.Length; i++)
+foreach (var prop in props)
 {
-    dict[props[i].Name] = data[i];
+    dict[prop.Name] = prop.GetValue(cityData);
 }
 
 var payload = new
@@ -25,4 +29,4 @@ var json = JsonSerializer.Serialize(payload);
 var response = await client.PostAsync("http://localhost:5153/api/data/store",
     new StringContent(json, Encoding.UTF8, "application/json"));
 
-return response ;
+return response;

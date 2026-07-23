@@ -4,6 +4,7 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Solution Items/" />
+  <Project Path="../ScriptRunner.Core/ScriptRunner.Core.csproj" Id="e6a8caee-7a86-452c-a6b5-1c5d24b25a9a" />
   <Project Path="Script_runner.csproj">
     <Platform Solution="*|x64" Project="x64" />
   </Project>

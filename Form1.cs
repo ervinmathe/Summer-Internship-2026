@@ -6,6 +6,9 @@ using SharedModels;
 using System.Net.Http;
 using System.Text.Json;
 using static ScintillaNET.Style;
+using ScriptRunner.Core;
+using ScriptRunner.Engine;
+
 
 namespace Script_runner {
     public partial class Form1 : Form {
@@ -19,16 +22,17 @@ namespace Script_runner {
                 .Select(tb => tb.Text)
                 .ToArray();
         }
+        public CityData city ;
 
         public ApiClient Api { get; } = new ApiClient();
 
         private async void button1_Click(object sender , EventArgs e) {
             try {
-                CityData city = new CityData();
+                city = new CityData();
                 city.Country = textBox1.Text;
                 city.County = textBox2.Text;
                 city.City = textBox3.Text;
-
+                /*
                 var globals = new PrintGlobals {
                     Form = this ,
                     City = city ,
@@ -55,8 +59,28 @@ namespace Script_runner {
                     // 3. Try running it again now that it has been successfully uploaded
                     result = await PreCompiledScriptRunner.RunFromApiAsync("printobject" , globals);
                 }
+                MessageBox.Show(result?.ToString() ?? "Script executed successfully!");*/
+                var context = new ScriptContext
+                {
+                    TargetBo = city,       // the CityData instance this script expects
+                    PropertyName = "",  
+                    OldValue = 0,
+                    NewValue = 0,
+                    EventType = ScriptEventType.After,
+                    UpdateStatus = text =>
+                    {
+                        if (resultLabel.InvokeRequired)
+                            resultLabel.Invoke(() => resultLabel.Text = text);
+                        else
+                            resultLabel.Text = text;
+                    }
+                };
 
-                MessageBox.Show(result?.ToString() ?? "Script executed successfully!");
+                ScriptResult result = await Task.Run(() => ScriptModule.ExecuteScript("printobject", context));
+
+                MessageBox.Show(result.ReturnValue as string);
+
+                
             } catch(Exception ex) {
                 MessageBox.Show($"Execution failed: {ex.Message}");
             }
@@ -65,7 +89,7 @@ namespace Script_runner {
         private async void createbutton_Click(object sender , EventArgs e) {
 
             try {
-
+                /*
 
                 ///definialni egy valtozot a globalis hozzafereshez
                 var globals = new InsertGlobals {
@@ -91,7 +115,25 @@ namespace Script_runner {
 
                 MessageBox.Show(res.ReturnValue.ToString());
                 //MessageBox.Show(city.ToString()) ;
+                */
+                city = new CityData();
+                city.Country = textBox1.Text;
+                city.County = textBox2.Text;
+                city.City = textBox3.Text;
 
+                var context = new ScriptContext
+                {
+                    TargetBo = city,       // the CityData instance this script expects
+                    PropertyName = "",  
+                    OldValue = 0,
+                    NewValue = 0,
+                    EventType = ScriptEventType.After,
+                    UpdateStatus = null
+                };
+
+                ScriptResult result = await Task.Run(() => ScriptModule.ExecuteScript("insertObject", context));
+
+                MessageBox.Show(result.ReturnValue as string);
             } catch(Exception ex) {
                 MessageBox.Show(ex.Message);
             }
@@ -111,7 +153,7 @@ namespace Script_runner {
 
         private async void button3_Click(object sender , EventArgs e) {
             try {
-                var globals = new InstanceBoGlobals {
+                /*var globals = new InstanceBoGlobals {
                     TypeName = "CityData" ,
                     data = GetAllTextBoxValues() ,
 
@@ -129,7 +171,25 @@ namespace Script_runner {
                 var res = await CSharpScript.RunAsync(code , options , globals: globals , globalsType: typeof(InstanceBoGlobals));
 
 
-                MessageBox.Show(res.ReturnValue.ToString());
+                MessageBox.Show(res.ReturnValue.ToString());*/
+                city = new CityData();
+                city.Country = textBox1.Text;
+                city.County = textBox2.Text;
+                city.City = textBox3.Text;
+
+                var context = new ScriptContext
+                {
+                    TargetBo = city,       // the CityData instance this script expects
+                    PropertyName = "",  
+                    OldValue = 0,
+                    NewValue = 0,
+                    EventType = ScriptEventType.After,
+                    UpdateStatus = null
+                };
+
+                ScriptResult result = await Task.Run(() => ScriptModule.ExecuteScript("createBoInstance", context));
+
+                MessageBox.Show(result.ReturnValue as string);
 
 
             } catch(Exception ex) {

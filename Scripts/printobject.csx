@@ -1,36 +1,42 @@
-//City.Country = "Hu" ;
-
+using System;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using SharedModels;
-using Script_runner;
+using ScriptRunner.Engine;
 
-async Task<CityData> modify(CityData City) {
+var City = context.TargetBo as CityData;
+if (City == null) return ScriptResult.Cancel("TargetBo is not CityData");
+
+async Task<CityData> modify(CityData city) {
     try {
-        Form.resultLabel.Text = "Elotte";
-
-        await Task.Delay(2000);
-        Form.resultLabel.Text = "Utana";
-
-    } catch(Exception ex) {
-        Form.resultLabel.Text = ex.Message;
-        return City;
+        // If TargetBo is or contains Form controls:
+        
+            context.UpdateStatus?.Invoke("Elotte");
+            await Task.Delay(2000);
+            context.UpdateStatus?.Invoke("Utana");
+        
+    } catch {
+        return city;
     }
 
     await Task.Delay(2000);
-    City.County = "Budapest";
-    City.City = "Budapest";
-    return City;
+    city.County = "Budapest";
+    city.City = "Budapest";
+    return city;
 }
 
 var result = await modify(City);
-Form.resultLabel.Text = $"Country: {result.Country} | County: {result.County} | City: {result.City}";
 
-// Run the other precompiled script from the DB
-var otherGlobals = new getBoData
-{
-    boName = "CityData"
+// Execute 'getBoData.csx' directly from our loaded DLL!var conetxtForExtraScript = new ScriptContext
+var context2 = new ScriptContext {
+    TargetBo = result ,
+    PropertyName = "" ,
+    OldValue = null ,
+    NewValue = null ,
+    EventType = ScriptEventType.After ,
+    UpdateStatus = text => context.UpdateStatus?.Invoke(text)
 };
 
-object extraResult = await PreCompiledScriptRunner.RunFromApiAsync("getBoData", otherGlobals);
+ScriptResult result2 = await Task.Run(() => ScriptModule.ExecuteScript("getBoData", context2));
 
-return $"Country: {result.Country}\nCounty: {result.County}\nCity: {result.City}\n---\n{extraResult}";
+return $"Country: {result.Country}\nCounty: {result.County}\nCity: {result.City}\n---\n{result2.ReturnValue}";
