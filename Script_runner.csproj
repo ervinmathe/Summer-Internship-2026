@@ -36,7 +36,12 @@
     </None>
   </ItemGroup>
   
-  
+  <ItemGroup>
+  <Compile Remove="LmContRestApi\**" />
+  <Content Remove="LmContRestApi\**" />
+  <EmbeddedResource Remove="LmContRestApi\**" />
+  <None Remove="LmContRestApi\**" />
+</ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Shared.Models\Shared.Models.csproj" />

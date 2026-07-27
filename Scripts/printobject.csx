@@ -5,16 +5,16 @@ using SharedModels;
 using ScriptRunner.Engine;
 
 var City = context.TargetBo as CityData;
-if (City == null) return ScriptResult.Cancel("TargetBo is not CityData");
+if(City == null) return ScriptResult.Cancel("TargetBo is not CityData");
 
 async Task<CityData> modify(CityData city) {
     try {
         // If TargetBo is or contains Form controls:
-        
-            context.UpdateStatus?.Invoke("Elotte");
-            await Task.Delay(2000);
-            context.UpdateStatus?.Invoke("Utana");
-        
+
+        context.UpdateStatus?.Invoke("Elotte");
+        await Task.Delay(2000);
+        context.UpdateStatus?.Invoke("Utana");
+
     } catch {
         return city;
     }
@@ -37,6 +37,6 @@ var context2 = new ScriptContext {
     UpdateStatus = text => context.UpdateStatus?.Invoke(text)
 };
 
-ScriptResult result2 = await Task.Run(() => ScriptModule.ExecuteScript("getBoData", context2));
+ScriptResult result2 = await Task.Run(() => ScriptModule.ExecuteScript("getBoData" , context2));
 
-return $"Country: {result.Country}\nCounty: {result.County}\nCity: {result.City}\n---\n{result2.ReturnValue}";
+return $"Update Country: {result.Country}\nCounty: {result.County}\nCity: {result.City}\n---\n{result2.ReturnValue}";

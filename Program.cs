@@ -11,7 +11,7 @@ namespace Script_runner {
         static void Main() {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
-            ScriptModule.InitializeScripts("C:\\Nyarigyak_2026\\task1\\Script_runner\\Scripts");
+            ScriptModule.InitializeScriptsAsync("C:\\Nyarigyak_2026\\task1\\Script_runner\\Scripts", new HttpClient()).Wait();
             ApplicationConfiguration.Initialize();
             Application.Run(new Form1());
         }
