@@ -69,6 +69,14 @@ namespace ScriptRunner.Engine
         {
             var syntaxTrees = new List<SyntaxTree>();
 
+            string version = ComputeScriptsVersion(scriptFiles);
+            var syntaxTrees = new List<SyntaxTree>
+            {
+                CSharpSyntaxTree.ParseText($"""
+                using System.Reflection;
+                [assembly: AssemblyInformationalVersion("{version}")]
+                """)
+            };
             // Dynamically retrieve exact shared models namespace
             string sharedModelsNamespace = typeof(SharedModels.CityData).Namespace ?? "SharedModels";
 
