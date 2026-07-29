@@ -19,11 +19,11 @@ using System.Windows.Forms;
 
 namespace Script_runner {
 
-
     public partial class ScriptEditor : Form {
         private Scintilla editor;
+        private Button btnNew;
         private Button btnSave;
-        private Button btnUpdate; // New Update Button
+        private Button btnUpdate;
         private Button btnDelete;
         private Button btnOpenExternal;
         private Panel buttonPanel;
@@ -31,7 +31,7 @@ namespace Script_runner {
         private ComboBox cmbScripts;
         private List<ExternalEditor> _availableEditors = new();
 
-        // Local folder where uncompiled temp scripts are stored
+        // Local folder where uncompiled temp/new scripts are stored
         private readonly string _localScriptsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory , "LocalScripts");
 
         public string ScriptText {
@@ -42,79 +42,87 @@ namespace Script_runner {
         public ScriptEditor() {
             InitializeComponent();
 
-            // Ensure the local scripts directory exists
+            // Ensure local scripts directory exists
             Directory.CreateDirectory(_localScriptsFolder);
 
-            // Button panel docked at the bottom
-            buttonPanel = new Panel {
-                Dock = DockStyle.Bottom ,
-                Height = 40
+            // ----------------------------------------------------
+            // 1. TOP PANEL (Script Dropdown)
+            // ----------------------------------------------------
+            var scriptPanel = new Panel {
+                Dock = DockStyle.Fill ,
+                Padding = new Padding(5 , 5 , 5 , 0)
             };
 
-            // 1. SAVE BUTTON (Local Disk Save)
-            btnSave = new Button {
-                Text = "Save Local" ,
-                Width = 90 ,
-                Height = 30 ,
-                Location = new Point(10 , 5)
+            cmbScripts = new ComboBox {
+                Dock = DockStyle.Fill ,
+                DropDownStyle = ComboBoxStyle.DropDownList
             };
+            cmbScripts.SelectedIndexChanged += CmbScripts_SelectedIndexChanged;
+            scriptPanel.Controls.Add(cmbScripts);
+
+            // ----------------------------------------------------
+            // 2. BOTTOM PANEL (Action Buttons)
+            // ----------------------------------------------------
+            buttonPanel = new Panel {
+                Dock = DockStyle.Fill
+            };
+
+            btnNew = new Button { Text = "New Script" , Width = 85 , Height = 30 , Location = new Point(10 , 5) };
+            btnNew.Click += BtnNew_Click;
+
+            btnSave = new Button { Text = "Save Local" , Width = 85 , Height = 30 , Location = new Point(100 , 5) };
             btnSave.Click += BtnSave_Click;
 
-            // 2. UPDATE BUTTON (Compile DLL & Upload to DB)
-            btnUpdate = new Button {
-                Text = "Update DB" ,
-                Width = 90 ,
-                Height = 30 ,
-                Location = new Point(110 , 5)
-            };
+            btnUpdate = new Button { Text = "Update DB" , Width = 85 , Height = 30 , Location = new Point(190 , 5) };
             btnUpdate.Click += BtnUpdate_Click;
 
-            // 3. DELETE BUTTON
-            btnDelete = new Button {
-                Text = "Delete" ,
-                Width = 80 ,
-                Height = 30 ,
-                Location = new Point(210 , 5)
-            };
+            btnDelete = new Button { Text = "Delete" , Width = 75 , Height = 30 , Location = new Point(280 , 5) };
             btnDelete.Click += BtnDelete_Click;
 
-            // 4. EXTERNAL EDITOR BUTTON
-            btnOpenExternal = new Button {
-                Text = "Open in External Editor" ,
-                Width = 150 ,
-                Height = 30 ,
-                Location = new Point(300 , 5)
-            };
+            btnOpenExternal = new Button { Text = "Open in External Editor" , Width = 150 , Height = 30 , Location = new Point(360 , 5) };
             btnOpenExternal.Click += btnOpenExternal_Click;
 
+            buttonPanel.Controls.Add(btnNew);
             buttonPanel.Controls.Add(btnSave);
             buttonPanel.Controls.Add(btnUpdate);
             buttonPanel.Controls.Add(btnDelete);
             buttonPanel.Controls.Add(btnOpenExternal);
 
-            // Script picker panel docked at the top
-            var scriptPanel = new Panel {
-                Dock = DockStyle.Top ,
-                Height = 30
-            };
-
-            cmbScripts = new ComboBox {
-                Dock = DockStyle.Fill ,
-                DropDownStyle = ComboBoxStyle.DropDownList ,
-                DisplayMember = nameof(ScriptListItem.Name)
-            };
-            cmbScripts.SelectedIndexChanged += CmbScripts_SelectedIndexChanged;
-            scriptPanel.Controls.Add(cmbScripts);
-
-            Controls.Add(buttonPanel);
-            Controls.Add(scriptPanel);
-
+            // ----------------------------------------------------
+            // 3. MIDDLE EDITOR (ScintillaNET)
+            // ----------------------------------------------------
             editor = new Scintilla {
                 Dock = DockStyle.Fill ,
                 Font = new Font("Consolas" , 10)
             };
-            Controls.Add(editor);
 
+            // ----------------------------------------------------
+            // 4. LAYOUT GRID (Guarantees zero overlap)
+            // ----------------------------------------------------
+            var mainLayout = new TableLayoutPanel {
+                Dock = DockStyle.Fill ,
+                ColumnCount = 1 ,
+                RowCount = 3 ,
+                Margin = new Padding(0) ,
+                Padding = new Padding(0)
+            };
+
+            // Row 0: Top Panel (35px fixed height)
+            // Row 1: Editor (100% remaining space)
+            // Row 2: Bottom Buttons (40px fixed height)
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent , 100F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute , 35F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent , 100F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute , 40F));
+
+            mainLayout.Controls.Add(scriptPanel , 0 , 0);
+            mainLayout.Controls.Add(editor , 0 , 1);
+            mainLayout.Controls.Add(buttonPanel , 0 , 2);
+
+            // Add only the layout grid to the Form
+            Controls.Add(mainLayout);
+
+            // Editor configuration & events
             ConfigureCSharpLexer();
             editor.Text = "// your .csx script here\n";
 
@@ -122,6 +130,46 @@ namespace Script_runner {
 
             editor.KeyDown += Editor_KeyDown;
             Load += ScriptEditor_Load;
+        }
+
+        /// <summary>
+        /// NEW BUTTON: Prompts for a script name, creates a local draft file, 
+        /// updates the dropdown list, and opens it in the editor.
+        /// </summary>
+        private async void BtnNew_Click(object sender , EventArgs e) {
+            string scriptName = PromptForInput("Create New Script" , "Enter script name:");
+
+            if(string.IsNullOrWhiteSpace(scriptName))
+                return;
+
+            // Sanitize file name
+            string cleanName = string.Concat(scriptName.Split(Path.GetInvalidFileNameChars())).Trim();
+            if(string.IsNullOrWhiteSpace(cleanName)) {
+                MessageBox.Show("Please enter a valid file name." , "Invalid Name" , MessageBoxButtons.OK , MessageBoxIcon.Warning);
+                return;
+            }
+
+            string localPath = GetLocalScriptPath(cleanName);
+
+            if(File.Exists(localPath)) {
+                MessageBox.Show($"A local script named '{cleanName}' already exists." , "Script Exists" , MessageBoxButtons.OK , MessageBoxIcon.Information);
+                await RefreshScriptListAsync(cleanName);
+                return;
+            }
+
+            try {
+                // Create starter code template
+                string starterCode = $"// {cleanName}.csx\nusing System;\n\n// Script implementation\n\n";
+                await File.WriteAllTextAsync(localPath , starterCode);
+
+                // Refresh dropdown list and select the new script
+                await RefreshScriptListAsync(cleanName);
+                editor.Text = starterCode;
+
+                MessageBox.Show($"New script '{cleanName}' created locally. Use 'Update DB' to compile and upload it to the database." , "Script Created" , MessageBoxButtons.OK , MessageBoxIcon.Information);
+            } catch(Exception ex) {
+                MessageBox.Show($"Could not create script file: {ex.Message}" , "Error" , MessageBoxButtons.OK , MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -146,8 +194,8 @@ namespace Script_runner {
         }
 
         /// <summary>
-        /// UPDATE BUTTON: Auto-saves current script locally, compiles all local scripts to DLL,
-        /// uploads DLL to DB via ScriptModule, and deletes local temp scripts upon success.
+        /// UPDATE BUTTON: Pulls all scripts from DB, merges with local edits/new scripts, 
+        /// compiles DLL, uploads to DB via /api/update, and cleans up temp files.
         /// </summary>
         private async void BtnUpdate_Click(object sender , EventArgs e) {
             btnUpdate.Enabled = false;
@@ -156,7 +204,7 @@ namespace Script_runner {
             try {
                 using var httpClient = new HttpClient();
 
-                // 1. Auto-save current editor script locally if a name is selected/entered
+                // 1. Auto-save current editor script locally if selected
                 string currentScriptName = GetCurrentScriptName();
                 if(!string.IsNullOrWhiteSpace(currentScriptName)) {
                     string localFilePath = GetLocalScriptPath(currentScriptName);
@@ -167,12 +215,10 @@ namespace Script_runner {
                 var dbScriptNames = await httpClient.GetFromJsonAsync<List<string>>("http://localhost:5153/api/update/scriptNames")
                     ?? new List<string>();
 
-                // 3. Download any script from the DB that IS NOT already in LocalScripts
+                // 3. Download any script from DB that IS NOT already in LocalScripts
                 foreach(var name in dbScriptNames) {
                     string localPath = GetLocalScriptPath(name);
 
-                    // If the local file doesn't exist yet, download from DB.
-                    // If it DOES exist, leave it alone so your local edits are preserved!
                     if(!File.Exists(localPath)) {
                         string encodedName = Uri.EscapeDataString(name);
                         var response = await httpClient.GetFromJsonAsync<JsonElement>($"http://localhost:5153/api/update/getScriptContent/{encodedName}");
@@ -184,7 +230,7 @@ namespace Script_runner {
                     }
                 }
 
-                // 4. Get all script files in LocalScripts (now contains ALL DB scripts + local edits)
+                // 4. Get all script files in LocalScripts
                 var allScriptFiles = Directory.GetFiles(_localScriptsFolder , "*.csx");
                 if(allScriptFiles.Length == 0) {
                     MessageBox.Show("No scripts found to compile." , "Information" , MessageBoxButtons.OK , MessageBoxIcon.Information);
@@ -214,12 +260,15 @@ namespace Script_runner {
                         updateResponse.EnsureSuccessStatusCode();
                     }
 
-                    // 7. Clean up and delete all temp .csx files after successful compilation & DB upload
+                    // 7. Clean up and delete all temp .csx files after successful compile & DB upload
                     foreach(var file in allScriptFiles) {
                         if(File.Exists(file)) {
                             File.Delete(file);
                         }
                     }
+
+                    // Refresh script list from database
+                    await RefreshScriptListAsync(currentScriptName);
 
                     MessageBox.Show("All scripts pulled, compiled into DLL, saved to database, and temp files cleaned up!" , "Success" , MessageBoxButtons.OK , MessageBoxIcon.Information);
                 } else {
@@ -233,13 +282,8 @@ namespace Script_runner {
             }
         }
 
-        /// <summary>
-        /// LOAD SCRIPT: Checks local folder first. If file exists, loads from disk. 
-        /// Otherwise, loads script from Database.
-        /// </summary>
         private async void CmbScripts_SelectedIndexChanged(object sender , EventArgs e) {
-            // Get the selected script name safely regardless of underlying item type
-            string selectedName = cmbScripts.SelectedItem?.ToString();
+            string selectedName = GetCurrentScriptName();
 
             if(!string.IsNullOrWhiteSpace(selectedName)) {
                 await LoadScriptContentAsync(selectedName);
@@ -253,15 +297,16 @@ namespace Script_runner {
             try {
                 string localFilePath = GetLocalScriptPath(scriptName);
 
-                // 1. Load from local temp folder if uncompiled local edits exist
+                // 1. Load from local temp folder if uncompiled local edits / new script exist
                 if(File.Exists(localFilePath)) {
                     editor.Text = await File.ReadAllTextAsync(localFilePath);
                     return;
                 }
 
-                // 2. Otherwise load from the database
+                // 2. Otherwise load from database
                 using var httpClient = new HttpClient();
-                var response = await httpClient.GetFromJsonAsync<JsonElement>($"http://localhost:5153/api/update/getScriptContent/{scriptName}");
+                string encodedName = Uri.EscapeDataString(scriptName);
+                var response = await httpClient.GetFromJsonAsync<JsonElement>($"http://localhost:5153/api/update/getScriptContent/{encodedName}");
 
                 if(response.TryGetProperty("scriptContent" , out var contentProp)) {
                     editor.Text = contentProp.GetString() ?? string.Empty;
@@ -273,19 +318,50 @@ namespace Script_runner {
             }
         }
 
+        /// <summary>
+        /// Fetches script names from DB, combines them with local uncompiled .csx files,
+        /// and refreshes the ComboBox dropdown.
+        /// </summary>
+        private async Task RefreshScriptListAsync(string selectScriptName = null) {
+            List<string> scriptNames = new();
+
+            try {
+                using var httpClient = new HttpClient();
+                var dbScripts = await httpClient.GetFromJsonAsync<List<string>>("http://localhost:5153/api/update/scriptNames");
+                if(dbScripts != null)
+                    scriptNames.AddRange(dbScripts);
+            } catch {
+                // Ignore API connection issues; local files will still be displayed
+            }
+
+            // Also check for local .csx files that haven't been pushed to DB yet
+            if(Directory.Exists(_localScriptsFolder)) {
+                var localFiles = Directory.GetFiles(_localScriptsFolder , "*.csx")
+                    .Select(Path.GetFileNameWithoutExtension);
+                scriptNames.AddRange(localFiles);
+            }
+
+            // Remove duplicates & sort
+            var uniqueScripts = scriptNames.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(s => s).ToList();
+
+            cmbScripts.DataSource = uniqueScripts;
+
+            // Restore/Set selected script index
+            if(!string.IsNullOrWhiteSpace(selectScriptName) && uniqueScripts.Contains(selectScriptName , StringComparer.OrdinalIgnoreCase)) {
+                cmbScripts.SelectedItem = uniqueScripts.First(s => s.Equals(selectScriptName , StringComparison.OrdinalIgnoreCase));
+            } else if(uniqueScripts.Count > 0) {
+                cmbScripts.SelectedIndex = 0;
+            }
+        }
+
         private string GetCurrentScriptName() {
-            return (cmbScripts.SelectedItem as ScriptListItem)?.Name ?? cmbScripts.Text;
+            return cmbScripts.SelectedItem?.ToString() ?? cmbScripts.Text.Trim();
         }
 
         private string GetLocalScriptPath(string scriptName) {
-            string fileName = scriptName.EndsWith(".csx" , StringComparison.OrdinalIgnoreCase)
-                ? scriptName
-                : $"{scriptName}.csx";
-
-            return Path.Combine(_localScriptsFolder , fileName);
+            string cleanName = Path.GetFileNameWithoutExtension(scriptName);
+            return Path.Combine(_localScriptsFolder , $"{cleanName}.csx");
         }
-
-        // --- Standard form loading, lexer setup, external editor handlers below ---
 
         private async void BtnDelete_Click(object sender , EventArgs e) {
             string scriptName = GetCurrentScriptName();
@@ -303,20 +379,16 @@ namespace Script_runner {
             }
 
             var confirm = MessageBox.Show(
-                $"Are you sure you want to delete the local unsaved changes for '{scriptName}'?\n\nThis will revert the editor back to the version stored in the database." ,
-                "Confirm Delete Local File" ,
+                $"Are you sure you want to delete local changes/file for '{scriptName}'?" ,
+                "Confirm Delete" ,
                 MessageBoxButtons.YesNo ,
                 MessageBoxIcon.Warning);
 
             if(confirm == DialogResult.Yes) {
                 try {
-                    // 1. Delete the local temp .csx file
                     File.Delete(localFilePath);
-
-                    // 2. Reload original code from DB to discard local edits
-                    await LoadScriptContentAsync(scriptName);
-
-                    MessageBox.Show($"Local file for '{scriptName}' deleted. Reverted to database version." , "Success" , MessageBoxButtons.OK , MessageBoxIcon.Information);
+                    await RefreshScriptListAsync();
+                    MessageBox.Show($"Local file for '{scriptName}' deleted." , "Success" , MessageBoxButtons.OK , MessageBoxIcon.Information);
                 } catch(Exception ex) {
                     MessageBox.Show($"Could not delete local file: {ex.Message}" , "Error" , MessageBoxButtons.OK , MessageBoxIcon.Error);
                 }
@@ -332,19 +404,41 @@ namespace Script_runner {
                 _ => "Open in External Editor"
             };
 
-            try {
-                using var httpClient = new HttpClient();
-                var scripts = await httpClient.GetFromJsonAsync<List<string>>("http://localhost:5153/api/update/scriptNames");
+            await RefreshScriptListAsync();
 
-                cmbScripts.DataSource = scripts;
-
-                // Force-load the content for the initially selected script when opening the form
-                if(cmbScripts.SelectedItem is string firstScriptName) {
-                    await LoadScriptContentAsync(firstScriptName);
-                }
-            } catch(Exception ex) {
-                MessageBox.Show($"Could not load scripts list: {ex.Message}" , "Error" , MessageBoxButtons.OK , MessageBoxIcon.Error);
+            string firstScriptName = GetCurrentScriptName();
+            if(!string.IsNullOrWhiteSpace(firstScriptName)) {
+                await LoadScriptContentAsync(firstScriptName);
             }
+        }
+
+        /// <summary>
+        /// Lightweight modal input dialog to prompt the user for script name.
+        /// </summary>
+        private static string PromptForInput(string title , string promptText) {
+            using Form prompt = new Form {
+                Width = 350 ,
+                Height = 160 ,
+                FormBorderStyle = FormBorderStyle.FixedDialog ,
+                Text = title ,
+                StartPosition = FormStartPosition.CenterParent ,
+                MaximizeBox = false ,
+                MinimizeBox = false
+            };
+
+            Label textLabel = new Label { Left = 15 , Top = 15 , Text = promptText , AutoSize = true };
+            TextBox textBox = new TextBox { Left = 15 , Top = 40 , Width = 300 };
+            Button confirmation = new Button { Text = "OK" , Left = 150 , Width = 80 , Top = 75 , DialogResult = DialogResult.OK };
+            Button cancel = new Button { Text = "Cancel" , Left = 235 , Width = 80 , Top = 75 , DialogResult = DialogResult.Cancel };
+
+            prompt.Controls.Add(textLabel);
+            prompt.Controls.Add(textBox);
+            prompt.Controls.Add(confirmation);
+            prompt.Controls.Add(cancel);
+            prompt.AcceptButton = confirmation;
+            prompt.CancelButton = cancel;
+
+            return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : string.Empty;
         }
 
         private void btnOpenExternal_Click(object sender , EventArgs e) {
@@ -500,8 +594,10 @@ namespace Script_runner {
                 e.SuppressKeyPress = true;
             }
         }
+
         public record ExternalEditor(string Name , string Path , string ArgsTemplate);
     }
+
     public class ScriptListItem {
         public string Name { get; set; } = string.Empty;
 
