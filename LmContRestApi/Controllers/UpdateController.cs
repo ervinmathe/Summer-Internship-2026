@@ -115,7 +115,13 @@ public class UpdateController : ControllerBase
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        const string query = "SELECT CompiledAssembly FROM CompiledScripts WHERE ScriptName = @name";
+        // TOP 1 + ORDER BY Id DESC ensures you get the latest inserted version
+        const string query = @"
+        SELECT TOP 1 CompiledAssembly 
+        FROM [dbo].[CompiledScripts] 
+        WHERE ScriptName = @name 
+        ORDER BY Id DESC";
+
         using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@name", name);
 
@@ -138,7 +144,13 @@ public class UpdateController : ControllerBase
         using var conn = new SqlConnection(_connectionString);
         await conn.OpenAsync();
 
-        const string query = "SELECT ScriptContent FROM CompiledScripts WHERE ScriptName = @name";
+        // TOP 1 + ORDER BY Id DESC ensures you get the latest inserted version
+        const string query = @"
+        SELECT TOP 1 ScriptContent 
+        FROM [dbo].[CompiledScripts] 
+        WHERE ScriptName = @name 
+        ORDER BY Id DESC";
+
         using var cmd = new SqlCommand(query, conn);
         cmd.Parameters.AddWithValue("@name", name);
 
@@ -153,5 +165,32 @@ public class UpdateController : ControllerBase
             ScriptName = name,
             ScriptContent = result.ToString()
         });
+    }
+
+    [HttpGet("scriptNames")]
+    public async Task<IActionResult> GetScriptNames()
+    {
+        using var conn = new SqlConnection(_connectionString);
+        await conn.OpenAsync();
+
+        // Dedup by ScriptName, keeping the last-inserted row (highest Id) per name.
+        const string query = @"
+        SELECT ScriptName
+        FROM (
+            SELECT ScriptName,
+                   ROW_NUMBER() OVER (PARTITION BY ScriptName ORDER BY Id DESC) AS rn
+            FROM CompiledScripts
+        ) latest
+        WHERE rn = 1
+        ORDER BY ScriptName";
+
+        using var cmd = new SqlCommand(query, conn);
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        var names = new List<string>();
+        while (await reader.ReadAsync())
+            names.Add(reader.GetString(0));
+
+        return Ok(names);
     }
 }

@@ -209,7 +209,7 @@ namespace Script_runner {
         // Add this to your Form1.cs
 
         private async void btnCompileAndUpload_Click(object sender , EventArgs e) {
-            try {
+            /*try {
                 var btn = (Button)sender;
                 btn.Enabled = false;
 
@@ -229,12 +229,12 @@ namespace Script_runner {
                 MessageBox.Show($"Failed to upload script:\n{ex.Message}" , "Error" , MessageBoxButtons.OK , MessageBoxIcon.Error);
             } finally {
                 ((Button)sender).Enabled = true;
-            }
+            }*/
         }
 
         private async  void button5_Click(object sender , EventArgs e) {
 
-            string scriptname = "printobject";
+            /*string scriptname = "printobject";
             var client = new HttpClient();
             var currentScript = string.Empty;
             try {
@@ -249,16 +249,16 @@ namespace Script_runner {
             } catch(Exception ex) {
                 MessageBox.Show($"Failed to fetch script content:\n{ex.Message}" , "Error" , MessageBoxButtons.OK , MessageBoxIcon.Error);
                 return;
-            }
+            }*/
             
 
             using (var editorForm = new ScriptEditor())
             {
-                editorForm.ScriptText = currentScript; 
+                ///editorForm.ScriptText = currentScript; 
 
                 if (editorForm.ShowDialog(this) == DialogResult.OK)
                 {
-                    currentScript = editorForm.ScriptText;
+                    //currentScript = editorForm.ScriptText;
                 }
             }
         }

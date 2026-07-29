@@ -38,11 +38,11 @@ catch (Exception ex) when (ex.Message.Contains("404") || ex.Message.Contains("no
     string scriptPath = Path.Combine(Application.StartupPath, "Scripts", "getBoData.csx");
 
     // Compile the local .csx file and insert it into the database
-    await uploader.UploadScriptAsync(
+    /*await uploader.UploadScriptAsync(
         scriptName: "getBoData",
-        scriptPath: scriptPath,
-        globalsType: typeof(getBoData)
-    );
+        //scriptPath: scriptPath,
+        //globalsType: typeof(getBoData)
+    );*/
 
     // 3. Try running it again now that it has been successfully uploaded
     result = await PreCompiledScriptRunner.RunFromApiAsync("getBoData", globals);
